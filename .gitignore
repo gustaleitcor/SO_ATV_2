@@ -30,3 +30,16 @@
 *.exe
 *.out
 *.app
+
+# Intermediate build directories
+build/
+obj/
+dist/
+tmp/
+bin/
+
+# Specific to certain Makefile setups
+Makefile.dep
+Makefile.bak
+Makefile.old
+Makefile.tmp
