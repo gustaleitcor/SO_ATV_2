@@ -1,14 +1,26 @@
 #include "algoset.h"
 
-#include <vector>
 #include <iostream>
+#include <stdexcept>
+#include <vector>
 
-int main() {
+int main(int argc, char *argv[]) {
+  std::vector<std::string_view> args = {argv + 1, argv + argc};
 
-  std::vector<size_t> pages = {1, 2, 3, 4, 1, 2, 5, 1, 2, 3, 4, 5};
-  std::cout << ALGO::fifo(pages, 3) << std::endl;
-  std::cout << ALGO::otm(pages, 3) << std::endl;
-  std::cout << ALGO::lru(pages, 3) << std::endl;
+  if (args.size() != 1) {
+    std::cerr << "Wrong parameters" << "\n";
+    return 1;
+  }
+
+  try {
+    std::pair<std::vector<size_t>, size_t> instance = reader(args[0]);
+    std::cout << ALGO::fifo(instance.first, instance.second) << std::endl;
+    std::cout << ALGO::otm(instance.first, instance.second) << std::endl;
+    std::cout << ALGO::lru(instance.first, instance.second) << std::endl;
+  } catch (std::runtime_error &error) {
+    std::cerr << error.what() << "\n";
+    return 1;
+  }
 
   return 0;
 }

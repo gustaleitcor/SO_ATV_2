@@ -2,10 +2,31 @@
 #include <algorithm>
 #include <cstddef>
 #include <deque>
-#include <iostream>
+#include <fstream>
 #include <iterator>
 #include <string>
 #include <vector>
+
+std::pair<std::vector<size_t>, size_t>
+reader(const std::filesystem::path &file_path) {
+  std::ifstream file(file_path);
+
+  if (!file) {
+    throw std::runtime_error("ERROR ON FILE OPENING");
+  }
+
+  std::vector<size_t> pages;
+  size_t page;
+  size_t frame_size;
+
+  file >> frame_size;
+
+  while (file >> page) {
+    pages.push_back(page);
+  }
+
+  return {pages, frame_size};
+}
 
 std::string ALGO::fifo(std::vector<size_t> pages, size_t frame_size) {
   size_t page_faults = std::min(pages.size(), frame_size);
