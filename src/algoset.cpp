@@ -3,7 +3,9 @@
 #include <cstddef>
 #include <deque>
 #include <fstream>
+#include <iostream>
 #include <iterator>
+#include <list>
 #include <string>
 #include <vector>
 
@@ -53,12 +55,12 @@ std::string ALGO::otm(std::vector<size_t> pages, size_t frame_size) {
     if (std::find(frames.begin(), frames.end(), pages[i]) == frames.end()) {
       page_faults++;
       auto e = std::min_element(
-          pages.begin() + i, pages.end(), [&frames](size_t a, size_t b) {
-            auto p_a = std::find(frames.begin(), frames.end(), a);
-            auto p_b = std::find(frames.begin(), frames.end(), b);
+          frames.begin(), frames.end(), [&pages, i](size_t a, size_t b) {
+            auto p_a = std::find(pages.begin() + i + 1, pages.end(), a);
+            auto p_b = std::find(pages.begin() + i + 1, pages.end(), b);
 
-            return std::distance(frames.end(), p_a) >
-                   std::distance(frames.end(), p_b);
+            return std::distance(pages.end(), p_a) >
+                   std::distance(pages.end(), p_b);
           });
       *e = pages[i];
     }
@@ -69,8 +71,8 @@ std::string ALGO::otm(std::vector<size_t> pages, size_t frame_size) {
 
 std::string ALGO::lru(std::vector<size_t> pages, size_t frame_size) {
   size_t page_faults = std::min(pages.size(), frame_size);
-  std::deque<size_t> frames(pages.begin(),
-                            pages.begin() + std::min(pages.size(), frame_size));
+  std::list<size_t> frames(pages.begin(),
+                           pages.begin() + std::min(pages.size(), frame_size));
 
   for (size_t i = frame_size; i < pages.size(); i++) {
     auto it = std::find(frames.begin(), frames.end(), pages[i]);
