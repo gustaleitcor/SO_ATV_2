@@ -6,6 +6,7 @@
 #include <iostream>
 #include <iterator>
 #include <list>
+#include <queue>
 #include <vector>
 
 std::pair<std::vector<size_t>, size_t>
@@ -18,28 +19,41 @@ reader(const std::filesystem::path &file_path) {
 
   std::vector<size_t> pages;
   size_t page;
-  size_t frame_size;
+  size_t frame_cap;
 
-  file >> frame_size;
+  file >> frame_cap;
 
   while (file >> page) {
     pages.push_back(page);
   }
 
-  return {pages, frame_size};
+  return {pages, frame_cap};
 }
 
-size_t ALGO::fifo(std::vector<size_t> pages, size_t frame_size) {
+size_t ALGO::fifo(std::vector<size_t> pages, size_t frame_cap) {
   // Inicialização das estruturas
   // page_faults: quantidade de faltas de página, dado pelo mínimo entre a
   // quantidade de páginas e o tamanho da tabela
-  // frames: tabela de páginas, inicializada com as primeiras páginas
-  size_t page_faults = std::min(pages.size(), frame_size);
-  std::deque<size_t> frames(pages.begin(),
-                            pages.begin() + std::min(pages.size(), frame_size));
+  // frames: tabela de páginas, inicializada com as primeiras páginas não
+  // repetidas
+  size_t page_faults = 0;
+  size_t off_set = 0;
+  std::deque<size_t> frames;
+  for (size_t i = 0; i < pages.size() && frames.size() != frame_cap; i++) {
+    if (std::find(frames.begin(), frames.end(), pages[i]) == frames.end()) {
+      page_faults++;
+      frames.push_back(pages[i]);
+    } else {
+      off_set++;
+    }
+  }
+
+  if (frames.size() != frame_cap) {
+    return page_faults;
+  }
 
   // Iteração sobre as páginas restantes
-  for (size_t i = frame_size; i < pages.size(); i++) {
+  for (size_t i = frame_cap + off_set; i < pages.size(); i++) {
     // Se a página não está na tabela, incrementa a quantidade de faltas de
     // página e remove a página mais antiga da tabela do topo e insere a página
     // mais recente no final
@@ -54,17 +68,30 @@ size_t ALGO::fifo(std::vector<size_t> pages, size_t frame_size) {
   return page_faults;
 }
 
-size_t ALGO::otm(std::vector<size_t> pages, size_t frame_size) {
+size_t ALGO::otm(std::vector<size_t> pages, size_t frame_cap) {
   // Inicialização das estruturas
   // page_faults: quantidade de faltas de página, dado pelo mínimo entre a
   // quantidade de páginas e o tamanho da tabela
-  // frames: tabela de páginas, inicializada com as primeiras páginas
-  size_t page_faults = std::min(pages.size(), frame_size);
-  std::vector<size_t> frames(
-      pages.begin(), pages.begin() + std::min(pages.size(), frame_size));
+  // frames: tabela de páginas, inicializada com as primeiras páginas não
+  // repetidas
+  size_t page_faults = 0;
+  size_t off_set = 0;
+  std::vector<size_t> frames;
+  for (size_t i = 0; i < pages.size() && frames.size() != frame_cap; i++) {
+    if (std::find(frames.begin(), frames.end(), pages[i]) == frames.end()) {
+      page_faults++;
+      frames.push_back(pages[i]);
+    } else {
+      off_set++;
+    }
+  }
+
+  if (frames.size() != frame_cap) {
+    return page_faults;
+  }
 
   // Iteração sobre as páginas restantes
-  for (size_t i = frame_size; i < pages.size(); i++) {
+  for (size_t i = frame_cap; i < pages.size(); i++) {
     // Se a página não está na tabela, incrementa a quantidade de faltas de
     // página e substitui a página mais distante de ser referenciada
     if (std::find(frames.begin(), frames.end(), pages[i]) == frames.end()) {
@@ -88,17 +115,33 @@ size_t ALGO::otm(std::vector<size_t> pages, size_t frame_size) {
   return page_faults;
 }
 
-size_t ALGO::lru(std::vector<size_t> pages, size_t frame_size) {
+size_t ALGO::lru(std::vector<size_t> pages, size_t frame_cap) {
   // Inicialização das estruturas
   // page_faults: quantidade de faltas de página, dado pelo mínimo entre a
   // quantidade de páginas e o tamanho da tabela
-  // frames: tabela de páginas, inicializada com as primeiras páginas
-  size_t page_faults = std::min(pages.size(), frame_size);
-  std::list<size_t> frames(pages.begin(),
-                           pages.begin() + std::min(pages.size(), frame_size));
+  // frames: tabela de páginas, inicializada com as primeiras páginas não
+  // repetidas
+  size_t page_faults = 0;
+  size_t off_set = 0;
+  std::list<size_t> frames;
+  for (size_t i = 0; i < pages.size() && frames.size() != frame_cap; i++) {
+    if (auto p = std::find(frames.begin(), frames.end(), pages[i]);
+        p == frames.end()) {
+      page_faults++;
+      frames.push_back(pages[i]);
+    } else {
+      frames.erase(p);
+      frames.push_back(pages[i]);
+      off_set++;
+    }
+  }
+
+  if (frames.size() != frame_cap) {
+    return page_faults;
+  }
 
   // Iteração sobre as páginas restantes
-  for (size_t i = frame_size; i < pages.size(); i++) {
+  for (size_t i = frame_cap + off_set; i < pages.size(); i++) {
     // Se a página não está na tabela, incrementa a quantidade de faltas de
     // página e remove a página mais antiga da tabela do topo e insere a página
     // mais recente no final

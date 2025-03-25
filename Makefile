@@ -10,7 +10,7 @@ OBJ_DIR = obj
 BIN_DIR = bin
 
 # Target executable
-TARGET = $(BIN_DIR)/main
+TARGET = $(BIN_DIR)/program
 
 # Find all .cpp files in the src directory
 SRCS = $(wildcard $(SRC_DIR)/*.cpp)
